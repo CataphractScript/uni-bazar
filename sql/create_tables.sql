@@ -20,3 +20,12 @@ CREATE TABLE booths (
     status_count INT CHECK (status_count BETWEEN 0 AND 6)
     status_end_date DATE
 )
+
+-- SUPPORT TABLE
+CREATE TABLE supports (
+    Employee_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fname VARCHAR(100) NOT NULL,
+    Lname VARCHAR(100) NOT NULL,
+    image_url VARCHAR(200),
+    password VARCHAR(512)
+)
