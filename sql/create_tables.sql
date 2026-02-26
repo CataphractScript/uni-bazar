@@ -47,11 +47,15 @@ CREATE TABLE supports (
 -- ACTION_LOG TABLES
 CREATE TABLE action_logs (
     log_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    employee_id INT
+    employee_id INT,
     ip_address INET NOT NULL,
     action_type VARCHAR(100),
     description TEXT,
     timestamp TIMESTAMP
+
+    FOREIGN KEY (employee_id)
+        REFERENCES supports(employee_id)
+        ON DELETE RESTRICT
 );
 
 -- DISCOUNT_TYPE ENUMS
@@ -59,6 +63,7 @@ CREATE TYPE DISCOUNT_TYPE AS ENUM ('FIXED', 'PERCENTAGE');
 -- DISCOUNT_CODE TABLES
 CREATE TYPE discount_codes (
     code_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    employee_id INT,
     code VARCHAR(20) UNIQUE NOT NULL,
     is_used BOOLEAN DEFAULT NOT NULL,
     expiration_date DATE,
@@ -68,6 +73,10 @@ CREATE TYPE discount_codes (
 
     CONSTRAINT check_amount_or_percent_not_null
         CHECK (amount IS NOT NULL OR percent IS NOT NULL)
+    
+    FOREIGN KEY (employee_id)
+        REFERENCES supports(employee_id)
+        ON DELETE RESTRICT
 );
 
 -- VIP TABELS
