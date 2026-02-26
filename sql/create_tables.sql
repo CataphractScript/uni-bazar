@@ -7,7 +7,6 @@ CREATE TABLE supports (
     password VARCHAR(512)
 );
 
-
 -- PLAN_TYPE ENUMS
 CREATE TYPE PLAN_TYPE AS ENUM ('GOLDEN','VIP');
 -- PLAN TABELS
@@ -36,6 +35,17 @@ CREATE TABLE users (
         CHECK (phone IS NOT NULL OR email IS NOT NULL)
 );
 
+-- EVENT ENUM
+CREATE TYPE PLAN_TYPE AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
+-- EVENT TABLES
+CREATE TABLE events (
+    event_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    event_type PLAN_TYPE NOT NULL,
+    event_timestamp TIMESTAMP,
+    
+    user_id INT REFERENCES users(user_id) ON DELETE RESTRICT -- attends relation
+);
+
 -- BOOTH TABLES
 CREATE TABLE booths (
     booth_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -58,7 +68,7 @@ CREATE TABLE golden_booths (
         REFERENCES booths(booth_id)
         ON DELETE CASCADE,
 
-    plan_id INT REFERENCES plans(plan_id) ON DELETE RESTRICT
+    plan_id INT REFERENCES plans(plan_id) ON DELETE RESTRICT -- OWNS realations
 );
 
 -- STORY TABLES
@@ -74,6 +84,7 @@ CREATE TABLE story (
         REFERENCES booths(booth_id)
         ON DELETE CASCADE
 );
+
 -- ACTION_LOG TABLES
 CREATE TABLE action_logs (
     log_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -92,7 +103,7 @@ CREATE TABLE action_logs (
 CREATE TYPE DISCOUNT_TYPE AS ENUM ('FIXED', 'PERCENTAGE');
 -- DISCOUNT_CODE TABLES
 CREATE TABLE discount_codes (
-    code_id SERIAL PRIMARY KEY,
+    code_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     employee_id INT,
     code VARCHAR(20) UNIQUE NOT NULL,
     is_used BOOLEAN NOT NULL DEFAULT FALSE,
@@ -109,10 +120,18 @@ CREATE TABLE discount_codes (
         ON DELETE RESTRICT
 );
 
+-- HAS realation table
+CREATE TABLE users_has_dicount_code (
+    user_id INT REFERENCES users(user_id) ON DELETE RESTRICT,
+    code_id INT REFERENCES discount_codes(code_id) ON DELETE RESTRICT,
+
+    PRIMARY KEY (user_id, code_id) 
+);
+
 -- VIP TABELS
 CREATE TABLE vips (
     vip_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
 
-    plan_id INT REFERENCES plans(plan_id) ON DELETE RESTRICT
+    plan_id INT REFERENCES plans(plan_id) ON DELETE RESTRICT -- OWNS realtions
 );
