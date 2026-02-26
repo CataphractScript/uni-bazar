@@ -34,6 +34,19 @@ CREATE TABLE golden_booths (
         ON DELETE CASCADE
 );
 
+-- STORY TABLES
+CREATE TABLE story (
+    booth_id INT NOT NULL,
+    story_id INT GENERATED ALWAYS AS IDENTITY,
+    content TEXT,
+    picture_url VARCHAR(200),
+
+    PRIMARY KEY (booth_id, story_id),
+
+    FOREIGN KEY (booth_id)
+        REFERENCES booths(booth_id)
+        ON DELETE CASCADE
+);
 
 -- SUPPORT TABLES
 CREATE TABLE supports (
@@ -61,8 +74,8 @@ CREATE TABLE action_logs (
 -- DISCOUNT_TYPE ENUMS
 CREATE TYPE DISCOUNT_TYPE AS ENUM ('FIXED', 'PERCENTAGE');
 -- DISCOUNT_CODE TABLES
-CREATE TYPE discount_codes (
-    code_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+CREATE TABLE discount_codes (
+    code_id SERIAL PRIMARY KEY,
     employee_id INT,
     code VARCHAR(20) UNIQUE NOT NULL,
     is_used BOOLEAN DEFAULT NOT NULL,
@@ -78,6 +91,17 @@ CREATE TYPE discount_codes (
         REFERENCES supports(employee_id)
         ON DELETE RESTRICT
 );
+
+-- PLAN_TYPE ENUMS
+CREATE TYPE PLAN_TYPE AS ENUM ('GOLDEN','VIP');
+-- PLAN TABELS
+CREATE TABLE plans (
+    plan_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    period DATE NOT NULL, 
+    price BIGINT NOT NULL
+    
+);
+
 
 -- VIP TABELS
 CREATE TABLE vips (
