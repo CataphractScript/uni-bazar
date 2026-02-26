@@ -21,18 +21,7 @@ CREATE TABLE booths (
     status_end_date DATE
 );
 
--- GOLDEN_BOOTH TABLES
-CREATE TABLE golden_booths (
-    booth_id INT NOT NULL,
-    plan_id INT GENERATED ALWAYS AS IDENTITY,
-    end_date DATE NOT NULL,
 
-    PRIMARY KEY (booth_id, plan_id),
-
-    FOREIGN KEY (booth_id)
-        REFERENCES booths(booth_id)
-        ON DELETE CASCADE
-);
 
 -- SUPPORT TABLES
 CREATE TABLE supports (
