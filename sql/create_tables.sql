@@ -24,14 +24,16 @@ CREATE TABLE booths (
 -- GOLDEN_BOOTH TABLES
 CREATE TABLE golden_booths (
     booth_id INT NOT NULL,
-    plan_id INT GENERATED ALWAYS AS IDENTITY,
+    id INT GENERATED ALWAYS AS IDENTITY,
     end_date DATE NOT NULL,
 
-    PRIMARY KEY (booth_id, plan_id),
+    PRIMARY KEY (booth_id, id),
 
     FOREIGN KEY (booth_id)
         REFERENCES booths(booth_id)
         ON DELETE CASCADE
+
+    plan_id INT REFERENCES plans(plan_id) ON DELETE RESTRICT
 );
 
 -- STORY TABLES
