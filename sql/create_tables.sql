@@ -99,6 +99,20 @@ CREATE TABLE orders (
     tracking_code VARCHAR(100) UNIQUE
 );
 
+CREATE TABLE order_items (
+    order_id INT NOT NULL,
+    id INT GENERATED ALWAYS AS IDENTITY,
+    price BIGINT NOT NULL,
+    unit VARCHAR(50),
+
+    PRIMARY KEY (order_id, id),
+
+    FOREIGN KEY (order_id)
+        REFERENCES orders(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
 CREATE TYPE payment_method AS ENUM ('Online', 'Wallet');
 
