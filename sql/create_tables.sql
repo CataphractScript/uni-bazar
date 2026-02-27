@@ -36,7 +36,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE addresses (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY,
     user_id INT NOT NULL,
     province VARCHAR(100),
     city VARCHAR(100),
@@ -45,26 +45,26 @@ CREATE TABLE addresses (
     receiver_name VARCHAR(100),
     receiver_phone VARCHAR(20),
 
-    CONSTRAINT pk_addresses PRIMARY KEY (id, user_id)
+    CONSTRAINT pk_addresses PRIMARY KEY (id, user_id),
 
     CONSTRAINT fk_addresses_user_id
-        FOREIGN KEY
-        REFERENCES users(user_id)
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- CART TABLES
 CREATE TABLE carts (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY,
     user_id INT NOT NULL,
     is_locked BOOLEAN DEFAULT FALSE,
 
     CONSTRAINT pk_carts PRIMARY KEY (id, user_id),
 
     CONSTRAINT fk_carts_user_id
-        FOREIGN KEY
-        REFERENCES users(user_id)
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -72,7 +72,7 @@ CREATE TABLE carts (
 COMMENT ON COLUMN carts.is_locked IS 'For VIP Locked_Cart feature';
 
 CREATE TABLE cart_items (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY,
     cart_id INT NOT NULL,
     cart_user_id INT NOT NULL,
     reserve_end TIMESTAMP NOT NULL, -- Lock_End_Date
