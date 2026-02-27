@@ -92,6 +92,7 @@ CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Ca
 CREATE TABLE orders (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    payment_id INT NOT NULL REFERENCES payments(id) ON DELETE CASCADE ON UPDATE CASCADE,
     order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     status order_status DEFAULT 'Pending',
     total_amount BIGINT,
