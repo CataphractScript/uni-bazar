@@ -119,7 +119,9 @@ CREATE TABLE order_item_comment (
     item_id INT NOT NULL,
     id INT GENERATED ALWAYS AS IDENTITY,
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    description TEXT
+    description TEXT,
+
+    badge_id INT REFERENCES badges(id) ON DELETE RESTRICT -- INCLUDE relation
 );
 
 CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
