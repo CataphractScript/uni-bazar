@@ -111,7 +111,8 @@ CREATE TABLE products (
     image_url TEXT,
     product_type product_category NOT NULL,
     stock_quantity INT,
-    booth_id INT NOT NULL REFERENCES booths(id) ON DELETE RESTRICT ON UPDATE RESTRICT -- BOOTH HAS PRODUCT relation
+    booth_id INT NOT NULL REFERENCES booths(id) ON DELETE RESTRICT ON UPDATE RESTRICT, -- BOOTH HAS PRODUCT relation
+    page_id INT NOT NULL REFERENCES pages(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
 
     CONSTRAINT check_product_type CHECK (
         (product_Type = 'Good' AND stock_Quantity IS NOT NULL) OR
