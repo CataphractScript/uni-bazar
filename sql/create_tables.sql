@@ -103,6 +103,8 @@ CREATE TABLE products (
         (product_Type = 'Good' AND stock_Quantity IS NOT NULL) OR
         (product_Type = 'Service' AND stock_Quantity IS NULL)
     )
+
+    booth_id INT NOT NULL REFERENCES booths(id) ON DELETE RESTRICT ON UPDATE RESTRICT -- BOOTH HAS PRODUCT relation
 );
 
 CREATE TABLE price_histories (
@@ -243,8 +245,8 @@ CREATE TABLE booths (
 );
 
 CREATE TABLE join_request (
-    user_id NT REFERENCES users(id) ON DELETE RESTRICT,
-    booth_id NT REFERENCES booths(id) ON DELETE RESTRICT,
+    user_id NT REFERENCES users(id) ON DELETE CASCADE,
+    booth_id NT REFERENCES booths(id) ON DELETE CASCADE,
     id INT GENERATED ALWAYS AS IDENTITY,
 
     PRIMARY KEY (user_id, booth_id, id)
