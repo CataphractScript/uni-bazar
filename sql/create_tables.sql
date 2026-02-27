@@ -116,7 +116,7 @@ CREATE TABLE order_items (
 CREATE TABLE order_item_comment (
     item_id INT NOT NULL,
     id INT GENERATED ALWAYS AS IDENTITY,
-    rating 
+    rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5)
     description TEXT
 );
 
