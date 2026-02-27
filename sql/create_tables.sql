@@ -87,9 +87,27 @@ CREATE TABLE cart_items (
         ON UPDATE CASCADE
 );
 
-CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled');
+-- PRODUCT TABLE
+CREATE TYPE product_category AS ENUM ('Good', 'Service');
+
+CREATE TABLE product (
+    product_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    unit VARCHAR(50),
+    image_url TEXT,
+    product_type product_category NOT NULL,
+    stock_quantity INT,
+
+    CONSTRAINT check_product_type CHECK (
+        (product_Type = 'Good' AND stock_Quantity IS NOT NULL) OR
+        (product_Type = 'Service' AND stock_Quantity IS NULL)
+    )
+);
 
 -- ORDER TABLES
+CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled');
+
 CREATE TABLE orders (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
