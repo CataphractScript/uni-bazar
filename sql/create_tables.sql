@@ -113,6 +113,23 @@ CREATE TABLE time_tables (
         CHECK (end_time > start_time)
 );
 
+-- USER PRODUCT BOOKMARKS TABLE
+CREATE TABLE user_product_bookmarks (
+    user_id BIGINT NOT NULL
+        REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    product_id BIGINT NOT NULL
+        REFERENCES products(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- when bookmark was created
+
+    CONSTRAINT pk_user_product_bookmarks PRIMARY KEY (user_id, product_id)
+);
+
 -- USER PRODUCT VIEWS TABLE
 CREATE TABLE user_product_views (
     user_id BIGINT NOT NULL
