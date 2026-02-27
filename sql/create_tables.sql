@@ -8,12 +8,13 @@ CREATE TABLE supports (
 );
 
 -- PLAN_TYPE ENUMS
-CREATE TYPE PLAN_TYPE AS ENUM ('GOLDEN','VIP');
+CREATE TYPE plan_type AS ENUM ('golden','vip');
 -- PLAN TABELS
 CREATE TABLE plans (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     period DATE NOT NULL, 
     price BIGINT NOT NULL,
+    type plan_type NOT NULL,
 
     -- ADD realations
     employee_id INT,
