@@ -86,6 +86,19 @@ CREATE TABLE cart_items (
         ON UPDATE CASCADE
 );
 
+CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled');
+
+-- ORDER TABLES
+CREATE TABLE orders (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status order_status DEFAULT 'Pending',
+    total_amount BIGINT,
+    final_amount BIGINT,
+    tracking_code VARCHAR(100) UNIQUE
+);
+
 -- EVENT ENUM
 CREATE TYPE PLAN_TYPE AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
 -- EVENT TABLES
