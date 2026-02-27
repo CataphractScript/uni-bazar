@@ -268,6 +268,31 @@ CREATE TABLE booths (
 
 );
 
+CREATE TABLE chats (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INT NOT NULL,
+    booth_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(user_id, booth_id)
+);
+
+CREATE TABLE messages (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    chat_id INT NOT NULL REFERENCES chats(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    user_sender_id INT REFERENCES users(id),
+    booth_sender_id INT REFERENCES booths(id),
+    
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT check_single_sender CHECK (
+        (user_sender_id IS NOT NULL AND booth_sender_id IS NULL) OR
+        (user_sender_id IS NULL AND booth_sender_id IS NOT NULL)
+    )
+);
+
 -- STATUS ENUM
 CREATE TYPE status_type AS ENUM('pending','rejected','accepted'); 
 
