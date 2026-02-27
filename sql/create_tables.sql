@@ -45,14 +45,14 @@ CREATE TABLE addresses (
     receiver_name VARCHAR(100),
     receiver_phone VARCHAR(20),
 
-    CONSTRAINT pk_addresses (id, user_id)
+    CONSTRAINT pk_addresses PRIMARY KEY (id, user_id)
 
     CONSTRAINT fk_addresses_user_id
         FOREIGN KEY
         REFERENCES users(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-)
+);
 
 -- CART TABLES
 CREATE TABLE carts (
@@ -60,7 +60,7 @@ CREATE TABLE carts (
     user_id INT NOT NULL,
     is_locked BOOLEAN DEFAULT FALSE,
 
-    CONSTRAINT pk_carts (id, user_id)
+    CONSTRAINT pk_carts PRIMARY KEY (id, user_id),
 
     CONSTRAINT fk_carts_user_id
         FOREIGN KEY
@@ -70,6 +70,21 @@ CREATE TABLE carts (
 );
 
 COMMENT ON COLUMN carts.is_locked IS 'For VIP Locked_Cart feature';
+
+CREATE TABLE cart_items (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cart_id INT NOT NULL,
+    cart_user_id INT NOT NULL,
+    reserve_end TIMESTAMP NOT NULL, -- Lock_End_Date
+
+    CONSTRAINT pk_cart_items PRIMARY KEY (id, cart_id, cart_user_id),
+
+    CONSTRAINT fk_cart_items_to_carts
+        FOREIGN KEY (cart_id, cart_user_id) 
+        REFERENCES carts(id, user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
 
 -- EVENT ENUM
 CREATE TYPE PLAN_TYPE AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
@@ -170,7 +185,7 @@ CREATE TABLE vips (
     user_id INT NOT NULL,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
 
-    CONSTRAINT pk_vips (id, user_id)
+    CONSTRAINT pk_vips PRIMARY KEY (id, user_id),
 
     CONSTRAINT fk_vips_user_id
         FOREIGN KEY
@@ -196,4 +211,4 @@ CREATE TABLE booth_requests (
     user_description TEXT,
     status STATUS_TYPE NOT NULL DEFAULT 'PENDING'
 
-)
+);
