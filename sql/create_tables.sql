@@ -268,29 +268,31 @@ CREATE TABLE booths (
 
 );
 
-CREATE TABLE join_request (
-    user_id NT REFERENCES users(id) ON DELETE CASCADE,
-    booth_id NT REFERENCES booths(id) ON DELETE CASCADE,
+-- STATUS ENUM
+CREATE TYPE status_type AS ENUM('pending','rejected','accepted'); 
+
+CREATE TABLE join_requests (
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    booth_id INT REFERENCES booths(id) ON DELETE CASCADE,
     id INT GENERATED ALWAYS AS IDENTITY,
 
+    status status_type NOT NULL DEFAULT 'pending',
+    
     PRIMARY KEY (user_id, booth_id, id)
 );
 
--- WORKS_ON relation
-CREATE TABLE works_on (
-    request_id REFERENCES join_request(id) ON DELETE RESTRICT,
-    user_id NT REFERENCES users(id) ON DELETE RESTRICT,
-    booth_id NT REFERENCES booths(id) ON DELETE RESTRICT,
-    
-    PRIMARY KEY (user_id, booth_id, request_id),
+CREATE TABLE join_requests_permissions (
+    user_id INT REFERENCES join_requests(user_id) ON DELETE RESTRICT,
+    booth_id INT REFERENCES join_requests(booth_id) ON DELETE RESTRICT,
+    request_id INT REFERENCES join_requests(id) ON DELETE RESTRICT,
+    permission INT REFERENCES permissions(id) ON DELETE RESTRICT, 
 
-    perm_no SMALLINT NOT NULL
-    /*
-    0001 : 1 : Can_Modify_Own_Products
-    0010 : 2 : Can_Modify_All_Products
-    0100 : 4 : Can_Add_Product
-    1000 : 8 : Can_Edit_Booth_Info
-    */
+    PRIMARY KEY (user_id, booth_id, request_id, permission)
+);
+
+CREATE TABLE permissions (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    description TEXT
 );
 
 -- VIEW relation
@@ -397,8 +399,6 @@ CREATE TABLE vips (
     plan_id INT REFERENCES plans(id) ON DELETE RESTRICT -- OWNS realtions
 );
 
--- STATUS ENUM
-CREATE TYPE status_type AS ENUM('pending','rejected','accepted'); 
 -- BOOTH_REQUEST TABLE
 CREATE TABLE booth_requests (
     user_id INT REFERENCES users(id) ON DELETE RESTRICT,
