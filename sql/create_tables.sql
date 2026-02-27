@@ -1,3 +1,20 @@
+CREATE SCHEMA my_unibazar;
+
+SET search_path TO my_unibazar;
+
+CREATE TYPE status_type AS ENUM('pending','rejected','accepted'); 
+CREATE TYPE plan_type AS ENUM ('Golden','VIP');
+CREATE TYPE page_request_status AS ENUM ('Pending', 'Approved', 'Rejected');
+CREATE TYPE page_status AS ENUM ('Draft', 'Published', 'Archived');
+CREATE TYPE product_category AS ENUM ('Good', 'Service');
+CREATE TYPE days_of_week AS ENUM ('Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
+CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled');
+CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
+CREATE TYPE payment_method AS ENUM ('Online', 'Wallet');
+CREATE TYPE discount_type AS ENUM ('fixed', 'percentage');
+CREATE TYPE event_type AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
+CREATE TYPE price_status AS ENUM ('Active', 'Inactive');
+
 -- SUPPORT TABLES
 CREATE TABLE supports (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -5,22 +22,6 @@ CREATE TABLE supports (
     Lname VARCHAR(100) NOT NULL,
     image_url VARCHAR(200),
     password VARCHAR(512)
-);
-
--- PLAN_TYPE ENUMS
-CREATE TYPE plan_type AS ENUM ('golden','vip');
--- PLAN TABELS
-CREATE TABLE plans (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    period DATE NOT NULL, 
-    price BIGINT NOT NULL,
-    type plan_type NOT NULL,
-
-    -- ADD realations
-    employee_id INT,
-    FOREIGN KEY (employee_id)
-        REFERENCES supports(id)
-        ON DELETE RESTRICT
 );
 
 -- USER TABLES
@@ -34,6 +35,21 @@ CREATE TABLE users (
 
     CONSTRAINT check_email_or_phone_not_null
         CHECK (phone IS NOT NULL OR email IS NOT NULL)
+);
+
+-- PLAN TABELS
+CREATE TABLE plans (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    duration INTERVAL NOT NULL,
+    price BIGINT NOT NULL,
+    type plan_type NOT NULL,
+
+    -- ADD realations
+    employee_id INT,
+
+    FOREIGN KEY (employee_id)
+        REFERENCES supports(id)
+        ON DELETE RESTRICT
 );
 
 CREATE TABLE addresses (
@@ -56,8 +72,6 @@ CREATE TABLE addresses (
 );
 
 -- PAGE REQUESTS
-CREATE TYPE page_request_status AS ENUM ('Pending', 'Approved', 'Rejected');
-
 CREATE TABLE page_requests (
     id INT GENERATED ALWAYS AS IDENTITY,
     user_id INT NOT NULL REFERENCES users(id) 
@@ -78,31 +92,60 @@ CREATE TABLE page_requests (
 );
 
 -- PAGE TABLE
-CREATE TYPE page_status AS ENUM ('Draft', 'Published', 'Archived');
-
 CREATE TABLE pages (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    page_request_id NOT NULL,
-    page_request_user_id NOT NULL,
-    page_request_support_id NOT NULL,
+    page_request_id INT NOT NULL,
+    page_request_user_id INT NOT NULL,
+    page_request_support_id INT NOT NULL,
 
     title TEXT NOT NULL,
     content TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- last update timestamp
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status page_status NOT NULL DEFAULT 'Draft'
+    status page_status NOT NULL DEFAULT 'Draft',
 
     CONSTRAINT fk_pages_to_page_requests
         FOREIGN KEY (page_request_id, page_request_user_id, page_request_support_id) 
-        REFERENCES carts(id, user_id, support_id)
+        REFERENCES page_requests (id, user_id, support_id)
         ON DELETE CASCADE
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
+);
+
+-- BOOTH_REQUEST TABLE
+CREATE TABLE booth_requests (
+    user_id INT REFERENCES users(id) ON DELETE RESTRICT,
+    employee_id INT REFERENCES supports(id) ON DELETE RESTRICT,
+    request_id INT GENERATED ALWAYS AS IDENTITY,
+    account_no VARCHAR(30) NOT NULL,
+    
+    PRIMARY KEY(user_id, employee_id, request_id),
+
+    date DATE NOT NULL,
+    reason TEXT,
+    booth_name VARCHAR(100) NOT NULL,
+    user_description TEXT,
+    status status_type NOT NULL DEFAULT 'pending'
+);
+
+-- BOOTH TABLES
+CREATE TABLE booths (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    booth_name VARCHAR(100) NOT NULL,
+    image_url VARCHAR(200),
+    description TEXT,
+    status_count INT CHECK (status_count BETWEEN 0 AND 6),
+    status_end_date DATE,
+
+    -- CREATES relation
+    user_id INT,
+    employee_id INT,
+    request_id INT,
+    FOREIGN KEY(user_id, employee_id, request_id) REFERENCES booth_requests(user_id, employee_id, request_id) ON DELETE RESTRICT
+
 );
 
 -- PRODUCT TABLE
-CREATE TYPE product_category AS ENUM ('Good', 'Service');
-
 CREATE TABLE products (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -137,8 +180,6 @@ CREATE TABLE price_histories (
 
     CONSTRAINT check_dates CHECK (valid_to IS NULL OR Valid_from <= Valid_to)
 );
-
-CREATE TYPE days_of_week AS ENUM ('Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday');
 
 CREATE TABLE time_tables (
     id INT GENERATED ALWAYS AS IDENTITY,
@@ -251,9 +292,16 @@ CREATE TABLE cart_items (
     )
 );
 
--- ORDER TABLES
-CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled');
+CREATE TABLE payments (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    payment_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status payment_status NOT NULL DEFAULT 'Pending',
+    payment_method payment_method NOT NULL,
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    transaction_ref VARCHAR(255) UNIQUE NOT NULL
+);
 
+-- ORDER TABLES
 CREATE TABLE orders (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -280,11 +328,11 @@ CREATE TABLE order_items (
     reserved_from TIMESTAMPTZ,
     reserved_to TIMESTAMPTZ,
 
-    CONSTRAINT pk_cart_items PRIMARY KEY (id, order_id),
+    CONSTRAINT pk_order_items PRIMARY KEY (id, order_id),
 
-    CONSTRAINT fk_order_items_to_orders
-        FOREIGN KEY (order_id, order_user_id) 
-        REFERENCES carts(id, user_id)
+    CONSTRAINT fk_order_items_order_id
+        FOREIGN KEY (order_id) 
+        REFERENCES orders(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
@@ -303,6 +351,12 @@ CREATE TABLE order_items (
     )
 );
 
+-- BADGE TABLES
+CREATE TABLE badges (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100)
+);
+
 CREATE TABLE order_item_comment (
     item_id INT NOT NULL,
     id INT GENERATED ALWAYS AS IDENTITY,
@@ -310,19 +364,6 @@ CREATE TABLE order_item_comment (
     description TEXT,
 
     badge_id INT REFERENCES badges(id) ON DELETE RESTRICT -- INCLUDE relation
-);
-
-CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
-CREATE TYPE payment_method AS ENUM ('Online', 'Wallet');
-
-CREATE TABLE payments (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    payment_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status payment_status NOT NULL DEFAULT 'Pending',
-    payment_method payment_method NOT NULL,
-    amount BIGINT NOT NULL CHECK (amount > 0),
-    transaction_ref VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- SHIPMENT TABLES
@@ -345,8 +386,6 @@ CREATE TABLE shipments (
         ON UPDATE CASCADE
 );
 
--- EVENT ENUM
-CREATE TYPE event_type AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
 -- EVENT TABLES
 CREATE TABLE events (
     event_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -356,22 +395,6 @@ CREATE TABLE events (
     user_id INT REFERENCES users(id) ON DELETE RESTRICT -- attends relation
 );
 
--- BOOTH TABLES
-CREATE TABLE booths (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    booth_name VARCHAR(100) NOT NULL,
-    image_url VARCHAR(200),
-    description TEXT,
-    status_count INT CHECK (status_count BETWEEN 0 AND 6),
-    status_end_date DATE,
-
-    -- CREATES relation
-    user_id INT,
-    employee_id INT,
-    request_id INT,
-    FOREIGN KEY(user_id, employee_id, request_id) REFERENCES booth_requests(user_id, employee_id, request_id) ON DELETE RESTRICT
-
-);
 
 CREATE TABLE chats (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -398,26 +421,26 @@ CREATE TABLE messages (
     )
 );
 
--- STATUS ENUM
-CREATE TYPE status_type AS ENUM('pending','rejected','accepted'); 
-
+-- JOIN_REQUESTS TABLE
 CREATE TABLE join_requests (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
     booth_id INT REFERENCES booths(id) ON DELETE CASCADE,
-    id INT GENERATED ALWAYS AS IDENTITY,
 
     status status_type NOT NULL DEFAULT 'pending',
-    
-    PRIMARY KEY (user_id, booth_id, id)
+
+    UNIQUE (id, user_id, booth_id)
 );
 
 CREATE TABLE join_requests_permissions (
-    user_id INT REFERENCES join_requests(user_id) ON DELETE RESTRICT,
+    join_requests_id INT REFERENCES join_requests(user_id) ON DELETE RESTRICT,
+    join_requests_user_id INT REFERENCES join_requests(user_id) ON DELETE RESTRICT,
     booth_id INT REFERENCES join_requests(booth_id) ON DELETE RESTRICT,
     request_id INT REFERENCES join_requests(id) ON DELETE RESTRICT,
     permission INT REFERENCES permissions(id) ON DELETE RESTRICT, 
 
-    PRIMARY KEY (user_id, booth_id, request_id, permission)
+    PRIMARY KEY (join_requests_id, join_requests_user_id, request_id, permission)
 );
 
 CREATE TABLE permissions (
@@ -449,12 +472,6 @@ CREATE TABLE golden_booths (
     plan_id INT REFERENCES plans(id) ON DELETE RESTRICT -- OWNS realations
 );
 
--- BADGE TABLES
-CREATE TABLE badges (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(100),
-);
-
 CREATE TABLE badge_approval (
     id INT GENERATED ALWAYS AS IDENTITY,
     employee_id INT REFERENCES supports(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -465,8 +482,7 @@ CREATE TABLE badge_approval (
     PRIMARY KEY (id, employee_id, order_item_id, comment_id),
 
     end_date DATE,
-    status status_type NOT NULL DEFAULT 'pending',
-
+    status status_type NOT NULL DEFAULT 'pending'
 );
 
 CREATE TABLE badge_badge_approval_assigned_to_booth (
@@ -505,8 +521,6 @@ CREATE TABLE action_logs (
         ON DELETE RESTRICT
 );
 
--- DISCOUNT_TYPE ENUMS
-CREATE TYPE discount_type AS ENUM ('fixed', 'percentage');
 -- DISCOUNT_CODE TABLES
 CREATE TABLE discount_codes (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -552,25 +566,7 @@ CREATE TABLE vips (
     plan_id INT REFERENCES plans(id) ON DELETE RESTRICT -- OWNS realtions
 );
 
--- BOOTH_REQUEST TABLE1
-CREATE TABLE booth_requests (
-    user_id INT REFERENCES users(id) ON DELETE RESTRICT,
-    employee_id INT REFERENCES supports(id) ON DELETE RESTRICT,
-    request_id INT GENERATED ALWAYS AS IDENTITY,
-    account_no VARCHAR(30) NOT NULL,
-    
-    PRIMARY KEY(user_id, employee_id, request_id),
-
-    date DATE NOT NULL,
-    reason TEXT,
-    booth_name VARCHAR(100) NOT NULL,
-    user_description TEXT,
-    status status_type NOT NULL DEFAULT 'pending'
-);
-
 -- CONSTANT PRICES TABLE
-CREATE TYPE price_status AS ENUM ('Active', 'Inactive');
-
 CREATE TABLE constant_prices (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     description TEXT NOT NULL,
