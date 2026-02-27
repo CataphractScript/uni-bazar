@@ -66,13 +66,12 @@ CREATE TABLE products (
     image_url TEXT,
     product_type product_category NOT NULL,
     stock_quantity INT,
+    booth_id INT NOT NULL REFERENCES booths(id) ON DELETE RESTRICT ON UPDATE RESTRICT -- BOOTH HAS PRODUCT relation
 
     CONSTRAINT check_product_type CHECK (
         (product_Type = 'Good' AND stock_Quantity IS NOT NULL) OR
         (product_Type = 'Service' AND stock_Quantity IS NULL)
     )
-
-    booth_id INT NOT NULL REFERENCES booths(id) ON DELETE RESTRICT ON UPDATE RESTRICT -- BOOTH HAS PRODUCT relation
 );
 
 CREATE TABLE price_histories (
@@ -139,14 +138,6 @@ CREATE TABLE cart_items (
     -- Attribute for VIP users
     reserve_end TIMESTAMPTZ NOT NULL, -- Lock_End_Date
 
-    CONSTRAINT pk_cart_items PRIMARY KEY (id, cart_id, cart_user_id),
-
-    CONSTRAINT fk_cart_items_to_carts
-        FOREIGN KEY (cart_id, cart_user_id) 
-        REFERENCES carts(id, user_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-
     -- Identifying relationship for REFERENCES (to Goods)
     good_product_id INT,
     quantity INTEGER,
@@ -156,6 +147,13 @@ CREATE TABLE cart_items (
     reserved_from TIMESTAMPTZ,
     reserved_to TIMESTAMPTZ,
 
+    CONSTRAINT pk_cart_items PRIMARY KEY (id, cart_id, cart_user_id),
+
+    CONSTRAINT fk_cart_items_to_carts
+        FOREIGN KEY (cart_id, cart_user_id) 
+        REFERENCES carts(id, user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
     -- Foreign Keys for strict mapping
     CONSTRAINT fk_cart_good FOREIGN KEY (good_product_id) REFERENCES products(id),
@@ -170,7 +168,6 @@ CREATE TABLE cart_items (
         (good_product_id IS NOT NULL AND service_Product_ID IS NULL AND quantity IS NOT NULL) OR
         (service_product_id IS NOT NULL AND good_product_ID IS NULL AND reserved_from IS NOT NULL)
     )
-
 );
 
 -- ORDER TABLES
