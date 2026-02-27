@@ -273,11 +273,36 @@ CREATE TABLE order_items (
 
     PRIMARY KEY (order_id, id),
 
-    FOREIGN KEY (order_id)
-        REFERENCES orders(id)
+    -- Identifying relationship for REFERENCES (to Goods)
+    good_product_id INT,
+    quantity INTEGER,
+
+    -- Identifying relationship for RESERVES (to Services)
+    service_product_id INT,
+    reserved_from TIMESTAMPTZ,
+    reserved_to TIMESTAMPTZ,
+
+    CONSTRAINT pk_cart_items PRIMARY KEY (id, cart_id, cart_user_id),
+
+    CONSTRAINT fk_cart_items_to_carts
+        FOREIGN KEY (cart_id, cart_user_id) 
+        REFERENCES carts(id, user_id)
         ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
+        ON UPDATE CASCADE,
+
+    -- Foreign Keys for strict mapping
+    CONSTRAINT fk_cart_good FOREIGN KEY (good_product_id) REFERENCES products(id),
+    CONSTRAINT fk_cart_service FOREIGN KEY (service_product_id) REFERENCES products(id),
+
+    -- Business Logic Constraints
+    CONSTRAINT check_positive_quantity CHECK (quantity > 0),
+    CONSTRAINT check_reservation_period CHECK (reserved_to > reserved_from),
+    
+    -- Ensures the row is either a Good or a Service
+    CONSTRAINT check_exclusive_reference CHECK (
+        (good_product_id IS NOT NULL AND service_Product_ID IS NULL AND quantity IS NOT NULL) OR
+        (service_product_id IS NOT NULL AND good_product_ID IS NULL AND reserved_from IS NOT NULL)
+    )
 
 CREATE TABLE order_item_comment (
     item_id INT NOT NULL,
