@@ -113,6 +113,13 @@ CREATE TABLE order_items (
         ON UPDATE CASCADE
 );
 
+CREATE TABLE order_item_comment (
+    item_id INT NOT NULL,
+    id INT GENERATED ALWAYS AS IDENTITY,
+    rating 
+    description TEXT
+);
+
 CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
 CREATE TYPE payment_method AS ENUM ('Online', 'Wallet');
 
@@ -127,11 +134,11 @@ CREATE TABLE payments (
 );
 
 -- EVENT ENUM
-CREATE TYPE EVENT_TYPE AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
+CREATE TYPE event_type AS ENUM('VIEW_BOOTH','VIEW_PRODUCT','ADD_TO_CART','PURCHASE');
 -- EVENT TABLES
 CREATE TABLE events (
     event_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    event_type EVENT_TYPE NOT NULL,
+    event_type event_type NOT NULL,
     event_timestamp TIMESTAMP,
     
     user_id INT REFERENCES users(id) ON DELETE RESTRICT -- attends relation
@@ -191,7 +198,7 @@ CREATE TABLE action_logs (
 );
 
 -- DISCOUNT_TYPE ENUMS
-CREATE TYPE DISCOUNT_TYPE AS ENUM ('FIXED', 'PERCENTAGE');
+CREATE TYPE discount_type AS ENUM ('FIXED', 'PERCENTAGE');
 -- DISCOUNT_CODE TABLES
 CREATE TABLE discount_codes (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -199,7 +206,7 @@ CREATE TABLE discount_codes (
     code VARCHAR(20) UNIQUE NOT NULL,
     is_used BOOLEAN NOT NULL DEFAULT FALSE,
     expiration_date DATE,
-    discount_type DISCOUNT_TYPE NOT NULL,
+    discount_type discount_type NOT NULL,
     amount BIGINT,
     percent DECIMAL(5, 2) CHECK (percent BETWEEN 0 AND 100),
 
@@ -237,7 +244,7 @@ CREATE TABLE vips (
 );
 
 -- STATUS ENUM
-CREATE TYPE STATUS_TYPE AS ENUM('PENDING','REJECTED','ACCEPTED'); 
+CREATE TYPE status_type AS ENUM('PENDING','REJECTED','ACCEPTED'); 
 -- BOOTH_REQUEST TABLE
 CREATE TABLE booth_requests (
     user_id INT REFERENCES users(id) ON DELETE RESTRICT,
@@ -249,6 +256,5 @@ CREATE TABLE booth_requests (
     reason TEXT,
     booth_name VARCHAR(100) NOT NULL,
     user_description TEXT,
-    status STATUS_TYPE NOT NULL DEFAULT 'PENDING'
-
+    status status_type NOT NULL DEFAULT 'PENDING'
 );
