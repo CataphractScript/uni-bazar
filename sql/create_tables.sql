@@ -200,6 +200,12 @@ CREATE TABLE golden_booths (
     plan_id INT REFERENCES plans(id) ON DELETE RESTRICT -- OWNS realations
 );
 
+-- BADGE TABLES
+CREATE TABLE badges (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100),
+);
+
 -- STORY TABLES
 CREATE TABLE story (
     booth_id INT NOT NULL,
