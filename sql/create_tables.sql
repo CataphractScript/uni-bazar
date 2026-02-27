@@ -75,7 +75,7 @@ CREATE TABLE cart_items (
     id INT GENERATED ALWAYS AS IDENTITY,
     cart_id INT NOT NULL,
     cart_user_id INT NOT NULL,
-    reserve_end TIMESTAMP NOT NULL, -- Lock_End_Date
+    reserve_end TIMESTAMPTZ NOT NULL, -- Lock_End_Date
 
     CONSTRAINT pk_cart_items PRIMARY KEY (id, cart_id, cart_user_id),
 
@@ -92,7 +92,7 @@ CREATE TYPE order_status AS ENUM ('Pending', 'Paid', 'Shipped', 'Delivered', 'Ca
 CREATE TABLE orders (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     status order_status DEFAULT 'Pending',
     total_amount BIGINT,
     final_amount BIGINT,
@@ -103,12 +103,13 @@ CREATE TYPE payment_status AS ENUM ('Success', 'Failed', 'Pending');
 CREATE TYPE payment_method AS ENUM ('Online', 'Wallet');
 
 CREATE TABLE payments (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status payment_status DEFAULT 'Pending',
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    payment_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status payment_status NOT NULL DEFAULT 'Pending',
     payment_method payment_method NOT NULL,
-    amount BIGINT,
-    transaction_ref VARCHAR(255) UNIQUE
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    transaction_ref VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- EVENT ENUM
