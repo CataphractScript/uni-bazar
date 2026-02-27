@@ -36,7 +36,22 @@ CREATE TABLE users (
 );
 
 CREATE TABLE addresses (
-    
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INT NOT NULL,
+    province VARCHAR(100),
+    city VARCHAR(100),
+    street VARCHAR(255),
+    postal_code VARCHAR(20),
+    receiver_name VARCHAR(100),
+    receiver_phone VARCHAR(20),
+
+    CONSTRAINT pk_addresses (id, user_id)
+
+    CONSTRAINT fk_addresses_user_id
+        FOREIGN KEY
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 )
 
 -- EVENT ENUM
@@ -142,7 +157,7 @@ CREATE TABLE vips (
 
     CONSTRAINT fk_vips_user_id
         FOREIGN KEY
-        REFERENCES users(user_id) ON DELETE CASCADE
+        REFERENCES users(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 
